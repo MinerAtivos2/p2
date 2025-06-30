@@ -1,0 +1,885 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Seleção de Ativos - Insights de Mercado</title>
+    <style>
+        /* Reset básico e configurações globais */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        /* Container principal do formulário */
+        .form-container {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            padding: 40px;
+            width: 100%;
+            max-width: 600px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .form-container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #1e3c72, #2a5298);
+        }
+
+        /* Título do formulário */
+        .form-title {
+            text-align: center;
+            margin-bottom: 30px;
+            color: #2c3e50;
+        }
+
+        .form-title h2 {
+            font-size: 2.2rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+            background: linear-gradient(135deg, #1e3c72, #2a5298);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .form-title p {
+            color: #666;
+            font-size: 1.1rem;
+        }
+
+        /* Grupos de campos */
+        .form-group {
+            margin-bottom: 25px;
+            position: relative;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 12px;
+            font-weight: 600;
+            color: #2c3e50;
+            font-size: 1rem;
+        }
+
+        /* Estilos dos campos de input */
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 15px 20px;
+            border: 2px solid #e1e8ed;
+            border-radius: 12px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            background: #fff;
+            font-family: inherit;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #1e3c72;
+            box-shadow: 0 0 0 3px rgba(30, 60, 114, 0.1);
+            transform: translateY(-2px);
+        }
+
+        /* Indicador de campo obrigatório */
+        .required {
+            color: #e74c3c;
+        }
+
+        /* Container de seleção de ativos */
+        .assets-container {
+            border: 2px solid #e1e8ed;
+            border-radius: 12px;
+            padding: 20px;
+            background: #f8f9fa;
+            transition: all 0.3s ease;
+        }
+
+        .assets-container:focus-within {
+            border-color: #1e3c72;
+            box-shadow: 0 0 0 3px rgba(30, 60, 114, 0.1);
+        }
+
+        .assets-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 12px;
+            margin-top: 15px;
+        }
+
+        .asset-item {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            background: white;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+
+        .asset-item:hover {
+            background: #f0f7ff;
+            border-color: #1e3c72;
+        }
+
+        .asset-item input[type="checkbox"] {
+            width: auto;
+            margin-right: 8px;
+            transform: scale(1.2);
+        }
+
+        .asset-item label {
+            margin: 0;
+            font-weight: 500;
+            font-size: 0.9rem;
+            cursor: pointer;
+            color: #2c3e50;
+        }
+
+        /* Seleção de período */
+        .period-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 12px;
+            margin-top: 15px;
+        }
+
+        .period-item {
+            position: relative;
+        }
+
+        .period-item input[type="radio"] {
+            position: absolute;
+            opacity: 0;
+            width: 100%;
+            height: 100%;
+            cursor: pointer;
+        }
+
+        .period-label {
+            display: block;
+            padding: 15px;
+            background: white;
+            border: 2px solid #e1e8ed;
+            border-radius: 10px;
+            text-align: center;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .period-item input[type="radio"]:checked + .period-label {
+            background: #1e3c72;
+            color: white;
+            border-color: #1e3c72;
+        }
+
+        .period-item:hover .period-label {
+            border-color: #1e3c72;
+            background: #f0f7ff;
+        }
+
+        .period-item input[type="radio"]:checked + .period-label:hover {
+            background: #1e3c72;
+            color: white;
+        }
+
+        /* Botão de envio */
+        .submit-btn {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            margin-top: 10px;
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(30, 60, 114, 0.3);
+        }
+
+        .submit-btn:active {
+            transform: translateY(0);
+        }
+
+        .submit-btn:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* Estados de loading */
+        .loading {
+            position: relative;
+            color: transparent;
+        }
+
+        .loading::after {
+            content: '';
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            top: 50%;
+            left: 50%;
+            margin-left: -10px;
+            margin-top: -10px;
+            border: 2px solid transparent;
+            border-top: 2px solid #fff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Mensagens de feedback */
+        .message {
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-weight: 500;
+            text-align: center;
+            display: none;
+        }
+
+        .message.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .message.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .message.show {
+            display: block;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Contador de seleção */
+        .selection-counter {
+            background: #e3f2fd;
+            border: 1px solid #2196f3;
+            border-radius: 8px;
+            padding: 10px;
+            margin-top: 15px;
+            text-align: center;
+            font-size: 0.9rem;
+            color: #1976d2;
+        }
+
+        /* Responsividade */
+        @media (max-width: 768px) {
+            .form-container {
+                padding: 30px 20px;
+                margin: 10px;
+            }
+
+            .form-title h2 {
+                font-size: 1.8rem;
+            }
+
+            .assets-grid {
+                grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+                gap: 8px;
+            }
+
+            .period-container {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 480px) {
+            body {
+                padding: 10px;
+            }
+
+            .form-container {
+                padding: 25px 15px;
+            }
+
+            .form-title h2 {
+                font-size: 1.6rem;
+            }
+
+            .assets-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        /* Animações de entrada */
+        .form-container {
+            animation: fadeInUp 0.6s ease;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+		
+			.assets-container {
+			    max-height: 400px;
+			    overflow-y: auto;
+			    border: 1px solid #ccc;
+			    padding: 10px;
+			  }
+
+			  .assets-grid {
+			    display: flex;
+			    flex-wrap: wrap;
+			    gap: 10px;
+			  }
+
+			  .asset-item {
+			    width: 120px;
+			  }
+
+			  .search-box {
+			    margin-bottom: 10px;
+			  }
+
+			  .selection-counter {
+			    margin-top: 10px;
+			    font-weight: bold;
+			    color: #333;
+			  }
+
+
+    /* Estilo do fundo do modal */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 1000;
+      justify-content: center;
+      align-items: center;
+    }
+
+    /* Estilo da caixa do modal */
+    .modal-content {
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      max-width: 500px;
+      text-align: center;
+    }
+
+    .close-btn {
+      margin-top: 15px;
+      background: #007BFF;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    .close-btn:hover {
+      background: #0056b3;
+    }
+
+
+
+
+    </style>
+</head>
+<body>
+    <div class="form-container">
+        <div class="form-title">
+            <h2>Balanceamento de portfólio</h2>
+            <p>Selecione os ativos e período para o balanceamento de portfólio</p>
+        </div>
+
+        <div id="message" class="message"></div>
+
+        <form id="assetsForm">
+            <div class="form-group">
+                <label for="email">E-mail <span class="required">*</span></label>
+                <input type="email" id="email" name="email" required placeholder="seu@email.com">
+            </div>
+
+            <!--<div class="form-group">
+                <label>Selecione os Ativos <span class="required">*</span></label>
+                <div class="assets-container">
+                    <p style="margin-bottom: 10px; color: #666; font-size: 0.9rem;">
+                        Escolha os ativos que deseja acompanhar:
+                    </p>
+                    <div class="assets-grid">
+                        <div class="asset-item">
+                            <input type="checkbox" id="petr4" name="ativos" value="PETR4">
+                            <label for="petr4">PETR4</label>
+                        </div>
+                        <div class="asset-item">
+                            <input type="checkbox" id="vale3" name="ativos" value="VALE3">
+                            <label for="vale3">VALE3</label>
+                        </div>
+                        <div class="asset-item">
+                            <input type="checkbox" id="itub4" name="ativos" value="ITUB4">
+                            <label for="itub4">ITUB4</label>
+                        </div>
+                        <div class="asset-item">
+                            <input type="checkbox" id="bbdc4" name="ativos" value="BBDC4">
+                            <label for="bbdc4">BBDC4</label>
+                        </div>
+                        <div class="asset-item">
+                            <input type="checkbox" id="abev3" name="ativos" value="ABEV3">
+                            <label for="abev3">ABEV3</label>
+                        </div>
+                        <div class="asset-item">
+                            <input type="checkbox" id="b3sa3" name="ativos" value="B3SA3">
+                            <label for="b3sa3">B3SA3</label>
+                        </div>
+                        <div class="asset-item">
+                            <input type="checkbox" id="mglu3" name="ativos" value="MGLU3">
+                            <label for="mglu3">MGLU3</label>
+                        </div>
+                        <div class="asset-item">
+                            <input type="checkbox" id="wege3" name="ativos" value="WEGE3">
+                            <label for="wege3">WEGE3</label>
+                        </div>
+                        <div class="asset-item">
+                            <input type="checkbox" id="suzb3" name="ativos" value="SUZB3">
+                            <label for="suzb3">SUZB3</label>
+                        </div>
+                        <div class="asset-item">
+                            <input type="checkbox" id="jbss3" name="ativos" value="JBSS3">
+                            <label for="jbss3">JBSS3</label>
+                        </div>
+                        <div class="asset-item">
+                            <input type="checkbox" id="rent3" name="ativos" value="RENT3">
+                            <label for="rent3">RENT3</label>
+                        </div>
+                        <div class="asset-item">
+                            <input type="checkbox" id="lren3" name="ativos" value="LREN3">
+                            <label for="lren3">LREN3</label>
+                        </div>
+                    </div>
+                    <div id="selectionCounter" class="selection-counter">
+                        Nenhum ativo selecionado
+                    </div>
+                </div>
+            </div>-->
+
+			<div class="form-group">
+			  <label>Selecione os Ativos para balanceamento de portfólio<span class="required">*</span></label>
+			  <div class="assets-container">
+				<input type="text" class="search-box" placeholder="Buscar ativo..." onkeyup="filterAssets(this.value)">
+				<div class="assets-grid" id="assetsGrid">
+				  <!-- Exemplo de ativos, repita até 100 -->
+				  <div class="asset-item"><input type="checkbox" id="petr4" name="ativos" value="PETR4" onchange="limitSelection()"><label for="petr4">PETR4</label></div>
+				  <div class="asset-item"><input type="checkbox" id="vale3" name="ativos" value="VALE3" onchange="limitSelection()"><label for="vale3">VALE3</label></div>
+				  <div class="asset-item">
+                            <input type="checkbox" id="petr4" name="ativos" value="PETR4" onchange="limitSelection(this)">
+                            <label for="petr4">PETR4</label>
+                        </div>
+                        <div class="asset-item">
+                            <input type="checkbox" id="vale3" name="ativos" value="VALE3"onchange="limitSelection(this)">
+                            <label for="vale3">VALE3</label>
+                        </div>
+                        <div class="asset-item">
+                            <input type="checkbox" id="itub4" name="ativos" value="ITUB4"onchange="limitSelection(this)">
+                            <label for="itub4">ITUB4</label>
+                        </div>
+                        <div class="asset-item">
+                            <input type="checkbox" id="bbdc4" name="ativos" value="BBDC4"onchange="limitSelection(this)">
+                            <label for="bbdc4">BBDC4</label>
+                        </div>
+                        <div class="asset-item">
+                            <input type="checkbox" id="abev3" name="ativos" value="ABEV3"onchange="limitSelection(this)">
+                            <label for="abev3">ABEV3</label>
+                        </div>
+                        <div class="asset-item">
+                            <input type="checkbox" id="b3sa3" name="ativos" value="B3SA3"onchange="limitSelection(this)">
+                            <label for="b3sa3">B3SA3</label>
+                        </div>
+                        <div class="asset-item">
+                            <input type="checkbox" id="mglu3" name="ativos" value="MGLU3"onchange="limitSelection(this)">
+                            <label for="mglu3">MGLU3</label>
+                        </div>
+                        <div class="asset-item">
+                            <input type="checkbox" id="wege3" name="ativos" value="WEGE3"onchange="limitSelection(this)">
+                            <label for="wege3">WEGE3</label>
+                        </div>
+                        <div class="asset-item">
+                            <input type="checkbox" id="suzb3" name="ativos" value="SUZB3"onchange="limitSelection(this)">
+                            <label for="suzb3">SUZB3</label>
+                        </div>
+                        <div class="asset-item">
+                            <input type="checkbox" id="jbss3" name="ativos" value="JBSS3"onchange="limitSelection(this)">
+                            <label for="jbss3">JBSS3</label>
+                        </div>
+                        <div class="asset-item">
+                            <input type="checkbox" id="rent3" name="ativos" value="RENT3"onchange="limitSelection(this)">
+                            <label for="rent3">RENT3</label>
+                        </div>
+                        <div class="asset-item">
+                            <input type="checkbox" id="lren3" name="ativos" value="LREN3"onchange="limitSelection(this)">
+                            <label for="lren3">LREN3</label>
+                        </div>
+				  <!-- Adicione mais ativos aqui -->
+				</div>
+				<div id="selectionCounter" class="selection-counter">Nenhum ativo selecionado</div>
+			  </div>
+			</div>
+
+			<script>
+  function filterAssets(query) {
+    const items = document.querySelectorAll('.asset-item');
+    query = query.toLowerCase();
+    items.forEach(item => {
+      const label = item.textContent.toLowerCase();
+      item.style.display = label.includes(query) ? '' : 'none';
+    });
+  }
+
+  function limitSelection() {
+    const checkboxes = document.querySelectorAll('input[name="ativos"]:checked');
+    const counter = document.getElementById('selectionCounter');
+    if (checkboxes.length > 2) {
+      alert("Você pode selecionar no máximo 20 ativos.");
+      event.target.checked = false;
+      return;
+    }
+    counter.textContent = checkboxes.length === 0
+      ? "Nenhum ativo selecionado"
+      : `${checkboxes.length} ativo(s) selecionado(s)`;
+  }
+</script>
+
+
+
+            <div class="form-group">
+                <label>Período de Análise <span class="required">*</span></label>
+                <div class="period-container">
+                    <div class="period-item">
+                        <input type="radio" id="intraday" name="periodo" value="mensal" required>
+                        <label for="intraday" class="period-label">
+                            <strong>Mensal</strong><br>
+                            <small>Evolução nos últimos 30 dias</small>
+                        </label>
+                    </div>
+                    <div class="period-item">
+                        <input type="radio" id="semanal" name="periodo" value="trimestral" required>
+                        <label for="semanal" class="period-label">
+                            <strong>Trimestral</strong><br>
+                            <small>Evolução no último trimestre</small>
+                        </label>
+                    </div>
+                    <div class="period-item">
+                        <input type="radio" id="mensal" name="periodo" value="semestral" required>
+                        <label for="mensal" class="period-label">
+                            <strong>Semestral</strong><br>
+                            <small>Evolução no último semestre</small>
+                        </label>
+                    </div>
+                    <div class="period-item">
+                        <input type="radio" id="trimestral" name="periodo" value="anual" required>
+                        <label for="trimestral" class="period-label">
+                            <strong>Anual</strong><br>
+                            <small>Evolução no último ano</small>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <button type="submit" class="submit-btn" id="submitBtn">
+                Enviar solicitação
+            </button>
+			
+			    <input type="checkbox" id="aceiteTermo" name="aceiteTermo" value="true" required>	
+                <label for="aceiteTermo2">
+				  Li e concordo com o <a href="#" target="_blank" >Termo de Uso (clique para ver)</a>.
+				</label>
+	
+	    <!--<input type="hidden" id="ipUsuario" name="ipUsuario">
+	
+			<p><strong>Seu IP:</strong> <span id="exibirIp">Carregando...</span></p>
+        </form>-->
+		
+		
+			  <!-- Link que abre o modal -->
+  <a href="#" onclick="openModal()">Clique aqui para ver o termo de uso</a>
+
+  <!-- Estrutura do modal -->
+  <div class="modal-overlay" id="modal">
+    <div class="modal-content">
+      <h2>Termos de Uso</h2>
+      <p>Este é um exemplo de texto dentro de um modal. Aqui você pode colocar os termos de uso ou qualquer outra informação relevante.</p>
+      <button class="close-btn" onclick="closeModal()">Fechar</button>
+    </div>
+  </div>
+
+  <script>
+    function openModal() {
+      document.getElementById('modal').style.display = 'flex';
+    }
+
+    function closeModal() {
+      document.getElementById('modal').style.display = 'none';
+    }
+  </script>
+		
+		
+		
+		
+    </div>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const form = document.getElementById('assetsForm');
+        const submitBtn = document.getElementById('submitBtn');
+        const messageDiv = document.getElementById('message');
+        const selectionCounter = document.getElementById('selectionCounter');
+        
+        // IMPORTANTE: Substitua esta URL pela URL do seu Google Apps Script
+        const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxd3b5tCmZbh5_-i9jOlEXBMBJFYsBbPg9j_rxQBrH6ybbGZO7X1fGxEq_ljC0tVuA/exec';
+        
+        // Função para mostrar mensagens ao usuário
+        function showMessage(text, type) {
+            messageDiv.textContent = text;
+            messageDiv.className = `message ${type} show`;
+            
+            // Remove a mensagem após 5 segundos
+            setTimeout(() => {
+                messageDiv.classList.remove('show');
+            }, 5000);
+        }
+        
+        // Função para validar email
+        function isValidEmail(email) {
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            return emailRegex.test(email);
+        }
+        
+        // Função para atualizar contador de seleção
+        function updateSelectionCounter() {
+            const selectedAssets = document.querySelectorAll('input[name="ativos"]:checked');
+            const count = selectedAssets.length;
+            
+            if (count === 0) {
+                selectionCounter.textContent = 'Nenhum ativo selecionado';
+                selectionCounter.style.background = '#fff3cd';
+                selectionCounter.style.borderColor = '#ffc107';
+                selectionCounter.style.color = '#856404';
+            } else {
+                selectionCounter.textContent = `${count} ativo${count > 1 ? 's' : ''} selecionado${count > 1 ? 's' : ''}`;
+                selectionCounter.style.background = '#d4edda';
+                selectionCounter.style.borderColor = '#28a745';
+                selectionCounter.style.color = '#155724';
+            }
+        }
+        
+        // Função para validar o formulário
+        function validateForm(formData) {
+            const errors = [];
+            
+            if (!formData.get('email') || !isValidEmail(formData.get('email'))) {
+                errors.push('E-mail deve ter um formato válido');
+            }
+            
+            const selectedAssets = document.querySelectorAll('input[name="ativos"]:checked');
+            if (selectedAssets.length === 0) {
+                errors.push('Selecione pelo menos um ativo');
+            }
+            
+            if (!formData.get('periodo')) {
+                errors.push('Selecione um período de análise');
+            }
+            
+            return errors;
+        }
+        
+        // Função para enviar dados para o Google Apps Script
+        async function submitToGoogleScript(formData) {
+            try {
+                const response = await fetch(GOOGLE_SCRIPT_URL, {
+                    method: 'POST',
+                    mode: 'no-cors', // Necessário para Google Apps Script
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: new URLSearchParams(formData)
+                });
+                
+                // Como usamos 'no-cors', não podemos ler a resposta
+                // Assumimos sucesso se não houve erro na requisição
+                return { success: true };
+                
+            } catch (error) {
+                console.error('Erro ao enviar dados:', error);
+                return { success: false, error: error.message };
+            }
+        }
+        
+        // Função principal para processar o envio do formulário
+        async function handleFormSubmit(event) {
+            event.preventDefault();
+            
+            // Desabilita o botão e mostra loading
+            submitBtn.disabled = true;
+            submitBtn.classList.add('loading');
+            
+            try {
+                // Coleta os dados do formulário
+                const formData = new FormData(form);
+                
+                // Coleta os ativos selecionados
+                const selectedAssets = Array.from(document.querySelectorAll('input[name="ativos"]:checked'))
+                    .map(checkbox => checkbox.value);
+                
+                // Substitui o campo ativos por uma string com os ativos selecionados
+                formData.delete('ativos');
+                formData.append('ativos', selectedAssets.join(', '));
+                
+                // Adiciona informações extras
+                formData.append('user_agent', navigator.userAgent);
+                formData.append('page_url', window.location.href);
+                formData.append('referrer', document.referrer);
+                formData.append('timestamp_local', new Date().toISOString());
+                
+                // Valida os dados
+                const validationErrors = validateForm(formData);
+                if (validationErrors.length > 0) {
+                    showMessage(validationErrors.join('. '), 'error');
+                    return;
+                }
+                
+                // Envia os dados
+                const result = await submitToGoogleScript(formData);
+                
+                if (result.success) {
+                    showMessage('Solicitação enviada com sucesso! Você receberá os insights em breve.', 'success');
+                    form.reset(); // Limpa o formulário
+                    updateSelectionCounter(); // Atualiza contador
+					alert("Solicitação enviada com sucesso! Você receberá os insights em breve."); 
+                } else {
+                    showMessage('Erro ao enviar solicitação. Tente novamente.', 'error');
+                }
+                
+            } catch (error) {
+                console.error('Erro no envio:', error);
+                showMessage('Erro inesperado. Tente novamente mais tarde.', 'error');
+            } finally {
+                // Reabilita o botão e remove loading
+                submitBtn.disabled = false;
+                submitBtn.classList.remove('loading');
+            }
+        }
+        
+        // Adiciona validação em tempo real para email
+        const emailInput = document.getElementById('email');
+        emailInput.addEventListener('blur', function(e) {
+            if (e.target.value && !isValidEmail(e.target.value)) {
+                e.target.style.borderColor = '#e74c3c';
+            } else {
+                e.target.style.borderColor = '#e1e8ed';
+            }
+        });
+        
+        // Adiciona listeners para os checkboxes de ativos
+        const assetCheckboxes = document.querySelectorAll('input[name="ativos"]');
+        assetCheckboxes.forEach(checkbox => {
+            checkbox.addEventListener('change', updateSelectionCounter);
+        });
+        
+        // Adiciona o event listener para o envio do formulário
+        form.addEventListener('submit', handleFormSubmit);
+        
+        // Inicializa o contador
+        updateSelectionCounter();
+        
+        // Verifica se a URL do Google Script foi configurada
+        if (GOOGLE_SCRIPT_URL === 'https://script.google.com/macros/s/AKfycbxXzgliJysn-4XEjKfiuWl3MYQW5eivRRZjwnpiCwYSo91CoLVoG-F3IWLiuSqkHGsp/exec') {
+            console.warn('⚠️ ATENÇÃO: Configure a URL do Google Apps Script na variável GOOGLE_SCRIPT_URL');
+            showMessage('Configuração pendente: URL do Google Apps Script não definida.', 'error');
+        }
+    });
+	
+	
+	
+	
+	    // Captura o IP via API pública e preenche campo oculto e visual
+    fetch("https://api.ipify.org?format=json")
+      .then(response => response.json())
+      .then(data => {
+        document.getElementById("ipUsuario").value = data.ip;
+        document.getElementById("exibirIp").textContent = data.ip;
+      })
+      .catch(() => {
+        document.getElementById("exibirIp").textContent = "Não foi possível obter o IP";
+      });
+
+    function validarFormulario() {
+      const aceite = document.getElementById("aceiteTermo");
+      if (!aceite.checked) {
+        alert("Você deve aceitar o Termo de Uso.");
+        return false;
+      }
+      alert("Formulário enviado com IP registrado: " + document.getElementById("ipUsuario").value);
+      return true;
+    }
+	
+	
+	
+	
+    </script>
+	
+	
+</body>
+</html>
