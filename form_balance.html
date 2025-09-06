@@ -1,0 +1,838 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Seleção de Ativos - Insights de Mercado</title>
+    <style>
+        /* (Mantenha o CSS original, mas adicione e modifique os estilos para a nova funcionalidade) */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .form-container {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            padding: 40px;
+            width: 100%;
+            max-width: 600px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .form-container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #1e3c72, #2a5298);
+        }
+
+        .form-title {
+            text-align: center;
+            margin-bottom: 30px;
+            color: #2c3e50;
+        }
+
+        .form-title h2 {
+            font-size: 2.2rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+            background: linear-gradient(135deg, #1e3c72, #2a5298);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .form-title p {
+            color: #666;
+            font-size: 1.1rem;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+            position: relative;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 12px;
+            font-weight: 600;
+            color: #2c3e50;
+            font-size: 1rem;
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 15px 20px;
+            border: 2px solid #e1e8ed;
+            border-radius: 12px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            background: #fff;
+            font-family: inherit;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #1e3c72;
+            box-shadow: 0 0 0 3px rgba(30, 60, 114, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .required {
+            color: #e74c3c;
+        }
+
+        .assets-container {
+            position: relative;
+        }
+        
+        /* Estilos do campo de busca */
+        .search-input {
+            width: 100%;
+            padding: 15px 20px;
+            border: 2px solid #e1e8ed;
+            border-radius: 12px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            background: #fff;
+            font-family: inherit;
+            margin-bottom: 10px;
+        }
+        
+        .search-input:focus {
+            outline: none;
+            border-color: #1e3c72;
+            box-shadow: 0 0 0 3px rgba(30, 60, 114, 0.1);
+        }
+
+        /* Container para os resultados de busca */
+        .search-results {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            position: absolute;
+            width: 100%;
+            background: #fff;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            z-index: 10;
+            max-height: 200px;
+            overflow-y: auto;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            display: none; /* Inicia oculto */
+        }
+
+        .search-results.active {
+            display: block;
+        }
+
+        .search-results li {
+            padding: 12px 15px;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+        }
+
+        .search-results li:hover {
+            background-color: #f0f7ff;
+        }
+
+        /* Estilos para os ativos selecionados */
+        .selected-assets-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 15px;
+            border: 2px solid #e1e8ed;
+            border-radius: 12px;
+            padding: 15px;
+            background: #f8f9fa;
+            min-height: 50px; /* Garante que o container não encolha demais */
+        }
+        
+        .selected-asset {
+            background: #e3f2fd;
+            color: #1a73e8;
+            padding: 8px 12px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .selected-asset .remove-asset {
+            cursor: pointer;
+            font-weight: bold;
+            color: #1a73e8;
+            font-size: 1.1rem;
+        }
+        
+        .selection-counter {
+            background: #e3f2fd;
+            border: 1px solid #2196f3;
+            border-radius: 8px;
+            padding: 10px;
+            margin-top: 15px;
+            text-align: center;
+            font-size: 0.9rem;
+            color: #1976d2;
+        }
+        
+        /* Nova classe para exibir o contador */
+        .assets-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+        
+        .assets-counter {
+            font-size: 0.9rem;
+            color: #666;
+            font-weight: 500;
+        }
+
+        .period-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 12px;
+            margin-top: 15px;
+        }
+
+        .period-item {
+            position: relative;
+        }
+
+        .period-item input[type="radio"] {
+            position: absolute;
+            opacity: 0;
+            width: 100%;
+            height: 100%;
+            cursor: pointer;
+        }
+
+        .period-label {
+            display: block;
+            padding: 15px;
+            background: white;
+            border: 2px solid #e1e8ed;
+            border-radius: 10px;
+            text-align: center;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .period-item input[type="radio"]:checked + .period-label {
+            background: #1e3c72;
+            color: white;
+            border-color: #1e3c72;
+        }
+
+        .period-item:hover .period-label {
+            border-color: #1e3c72;
+            background: #f0f7ff;
+        }
+
+        .period-item input[type="radio"]:checked + .period-label:hover {
+            background: #1e3c72;
+            color: white;
+        }
+        
+        /* Estilos do Termo de Uso */
+        .terms-container {
+            margin-top: 25px;
+            margin-bottom: 25px;
+        }
+
+        .terms-text {
+            background-color: #f0f7ff;
+            border: 1px solid #cce5ff;
+            border-radius: 8px;
+            padding: 15px;
+            max-height: 150px;
+            overflow-y: auto;
+            font-size: 0.9rem;
+            color: #333;
+            line-height: 1.5;
+            margin-bottom: 15px;
+        }
+
+        .terms-text p {
+            margin-bottom: 10px;
+        }
+
+        .terms-checkbox {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+        }
+
+        .terms-checkbox input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            accent-color: #1e3c72; /* Cor do checkbox */
+        }
+        
+        .submit-btn {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            margin-top: 10px;
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(30, 60, 114, 0.3);
+        }
+
+        .submit-btn:active {
+            transform: translateY(0);
+        }
+
+        .submit-btn:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .loading {
+            position: relative;
+            color: transparent;
+        }
+
+        .loading::after {
+            content: '';
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            top: 50%;
+            left: 50%;
+            margin-left: -10px;
+            margin-top: -10px;
+            border: 2px solid transparent;
+            border-top: 2px solid #fff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .message {
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-weight: 500;
+            text-align: center;
+            display: none;
+        }
+
+        .message.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .message.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .message.show {
+            display: block;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .info-message {
+            color: #666;
+            font-size: 0.9rem;
+            margin-bottom: 10px;
+        }
+
+        @media (max-width: 768px) {
+            .form-container {
+                padding: 30px 20px;
+                margin: 10px;
+            }
+
+            .form-title h2 {
+                font-size: 1.8rem;
+            }
+
+            .period-container {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 480px) {
+            body {
+                padding: 10px;
+            }
+
+            .form-container {
+                padding: 25px 15px;
+            }
+
+            .form-title h2 {
+                font-size: 1.6rem;
+            }
+        }
+
+        .form-container {
+            animation: fadeInUp 0.6s ease;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        /* Estilos do Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 100;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(5px);
+            -webkit-animation: fadeIn 0.5s;
+            animation: fadeIn 0.5s
+        }
+        
+        .modal-content {
+            background-color: #fefefe;
+            margin: 15% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+            max-width: 500px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2), 0 6px 20px 0 rgba(0,0,0,0.19);
+        }
+        
+        .modal-content h3 {
+            text-align: center;
+            color: #1e3c72;
+            margin-bottom: 20px;
+        }
+        
+        .modal-content p {
+            font-size: 0.9rem;
+            line-height: 1.6;
+            color: #555;
+            margin-bottom: 15px;
+        }
+        
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            transition: color 0.3s ease;
+        }
+        
+        .close:hover,
+        .close:focus {
+            color: #333;
+            text-decoration: none;
+            cursor: pointer;
+        }
+        
+        @-webkit-keyframes fadeIn {
+            from {opacity: 0} 
+            to {opacity: 1}
+        }
+        
+        @keyframes fadeIn {
+            from {opacity: 0} 
+            to {opacity: 1}
+        }
+    </style>
+</head>
+<body>
+    <div class="form-container">
+        <div class="form-title">
+            <h2>Insights de Mercado</h2>
+            <p>Balanceamento de portfólio</p>
+        </div>
+
+        <div id="message" class="message"></div>
+
+        <form id="assetsForm">
+            <div class="form-group">
+                <label for="email">E-mail <span class="required">*</span></label>
+                <input type="email" id="email" name="email" required placeholder="seu@email.com">
+            </div>
+
+            <div class="form-group">
+                <div class="assets-info">
+                    <label>Selecione os Ativos <span class="required">*</span></label>
+                    <span id="assetsCounter" class="assets-counter">0/10</span>
+                </div>
+                <div class="assets-container">
+                    <p class="info-message">
+                        Digite para buscar e selecionar os ativos (máximo de 10):
+                    </p>
+                    <input type="text" id="assetSearch" class="search-input" placeholder="Ex: PETR4, VALE3...">
+                    <ul id="searchResults" class="search-results"></ul>
+                    <div id="selectedAssetsContainer" class="selected-assets-container">
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Período de Análise <span class="required">*</span></label>
+                <div class="period-container">
+                     <div class="period-item">
+                        <input type="radio" id="intraday" name="periodo" value="mensal" required>
+                        <label for="intraday" class="period-label">
+                            <strong>Mensal</strong><br>
+                            <small>Evolução nos últimos 30 dias</small>
+                        </label>
+                    </div>
+                    <div class="period-item">
+                        <input type="radio" id="semanal" name="periodo" value="trimestral" required>
+                        <label for="semanal" class="period-label">
+                            <strong>Trimestral</strong><br>
+                            <small>Evolução no último trimestre</small>
+                        </label>
+                    </div>
+                    <div class="period-item">
+                        <input type="radio" id="mensal" name="periodo" value="semestral" required>
+                        <label for="mensal" class="period-label">
+                            <strong>Semestral</strong><br>
+                            <small>Evolução no último semestre</small>
+                        </label>
+                    </div>
+                    <div class="period-item">
+                        <input type="radio" id="trimestral" name="periodo" value="anual" required>
+                        <label for="trimestral" class="period-label">
+                            <strong>Anual</strong><br>
+                            <small>Evolução no último ano</small>
+                        </label>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="form-group terms-container">
+                <div class="terms-checkbox">
+                    <input type="checkbox" id="aceiteTermo" name="aceiteTermo" required>
+                    <label for="aceiteTermo">
+                        Li e concordo com os <a href="#" id="openModalLink">Termos de Uso</a>.
+                    </label>
+                </div>
+            </div>
+
+            <button type="submit" class="submit-btn" id="submitBtn">
+                Receber Insights
+            </button>
+        </form>
+    </div>
+
+    <div id="terms-modal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h3>Termos de Uso</h3>
+			<iframe id="modal-iframe" src="termo.html" width="100%" height="400px" style="border: none;"></iframe>
+            <!--<p>Ao se cadastrar, você concorda em receber análises e insights sobre o mercado financeiro em seu e-mail. Garantimos que seus dados não serão compartilhados com terceiros e serão utilizados exclusivamente para o envio do conteúdo solicitado. Você poderá se descadastrar a qualquer momento.</p>
+        -->
+		</div>
+    </div>
+    
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const form = document.getElementById('assetsForm');
+        const submitBtn = document.getElementById('submitBtn');
+        const messageDiv = document.getElementById('message');
+        const assetSearchInput = document.getElementById('assetSearch');
+        const searchResultsList = document.getElementById('searchResults');
+        const selectedAssetsContainer = document.getElementById('selectedAssetsContainer');
+        const assetsCounterSpan = document.getElementById('assetsCounter');
+        const termosCheckbox = document.getElementById('aceiteTermo');
+        const openModalLink = document.getElementById('openModalLink');
+        const modal = document.getElementById('terms-modal');
+        const closeModalBtn = document.querySelector('#terms-modal .close');
+        
+        const MAX_ASSETS = 10; // Define o limite máximo de ativos
+        
+        // IMPORTANTE: Substitua esta URL pela URL do seu Google Apps Script
+        const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxd3b5tCmZbh5_-i9jOlEXBMBJFYsBbPg9j_rxQBrH6ybbGZO7X1fGxEq_ljC0tVuA/exec';
+        
+        const allAvailableAssets = ['AESB3', 'AALR3', 'ABCB4', 'ABEV3', 'AERI3', 'AGRO3', 'ALPA3', 'ALPA4', 'ALPK3', 'ALSO3', 'ALUP11', 'ALUP3', 'ALUP4', 'AMAR3', 'AMBP3', 'ANIM3', 'APER3', 'ARZZ3', 'ATOM3', 'AVLL3', 'AZEV3', 'AZEV4', 'AZUL4', 'B3SA3', 'BAHI3', 'BALM3', 'BALM4', 'BAUH4', 'BAZA3', 'BBAS3', 'BBDC3', 'BBDC4', 'BBRK3', 'BBSE3', 'BEEF3', 'BEES3', 'BEES4', 'BGIP3', 'BGIP4', 'BIDI11', 'BIDI3', 'BIDI4', 'BIOM3', 'BKBR3', 'BMEB4', 'BMGB4', 'BMIN3', 'BMIN4', 'BMKS3', 'BNBR3', 'BOAS3', 'BOBR4', 'BPAC11', 'BPAC3', 'BPAC5', 'BPAN4', 'BRAP3', 'BRAP4', 'BRFS3', 'BRGE12', 'BRIV3', 'BRIV4', 'BRKM3', 'BRKM5', 'BRKM6', 'BRML3', 'BRPR3', 'BRSR3', 'BRSR6', 'BSLI3', 'BSLI4', 'CAMB3', 'CAML3', 'CARD3', 'CASH3', 'CBEE3', 'CCRO3', 'CEAB3', 'CEBR3', 'CEBR5', 'CEBR6', 'CEDO4', 'CEEB3', 'CEPE5', 'CEPE6', 'CESP3', 'CESP6', 'CGAS5', 'CGRA3', 'CGRA4', 'CIEL3', 'CLSC4', 'CMIG3', 'CMIG4', 'COCE5', 'COGN3', 'CPFE3', 'CPLE3', 'CPLE6', 'CRDE3', 'CRFB3', 'CRIV3', 'CRIV4', 'CRPG5', 'CSAN3', 'CSMG3', 'CSNA3', 'CTKA4', 'CTNM3', 'CTNM4', 'CTSA3', 'CTSA4', 'CURY3', 'CVCB3', 'CYRE3', 'DASA3', 'DIRR3', 'DMMO3', 'DMVF3', 'DOHL4', 'EALT3', 'EALT4', 'ECOR3', 'EGIE3', 'ELET3', 'ELET6', 'EMAE4', 'EMBR3', 'ENAT3', 'ENBR3', 'ENEV3', 'ENGI11', 'ENGI3', 'ENGI4', 'ENJU3', 'ENMT3', 'EQMA3B', 'EQPA3', 'EQTL3', 'EUCA3', 'EUCA4', 'EVEN3', 'EZTC3', 'FESA3', 'FESA4', 'FLRY3', 'FRAS3', 'GEPA3', 'GEPA4', 'GFSA3', 'GGBR3', 'GGBR4', 'GMAT3', 'GNDI3', 'GOAU3', 'GOAU4', 'GOLL4', 'GRND3', 'GUAR3', 'HAGA3', 'HAGA4', 'HAPV3', 'HBOR3', 'HBSA3', 'HBTS5', 'HETA4', 'HYPE3', 'IRBR3', 'ITSA3', 'ITSA4', 'ITUB3', 'ITUB4', 'JBSS3', 'JHSF3', 'JSLG3', 'KEPL3', 'KLBN11', 'KLBN3', 'KLBN4', 'LAVV3', 'LCAM3', 'LEVE3', 'LIGT3', 'LIPR3', 'LJQQ3', 'LOGG3', 'LOGN3', 'LPSB3', 'LREN3', 'LUXM4', 'LWSA3', 'MDIA3', 'MDNE3', 'MEAL3', 'MELK3', 'MGEL4', 'MGLU3', 'MILS3', 'MNDL3', 'MNPR3', 'MOAR3', 'MOVI3', 'MRFG3', 'MRVE3', 'MTRE3', 'MTSA4', 'MULT3', 'MYPK3', 'NEOE3', 'NGRD3', 'NORD3', 'NTCO3', 'ODPV3', 'OFSA3', 'OSXB3', 'PARD3', 'PCAR3', 'PDGR3', 'PDTC3', 'PETR3', 'PETR4', 'PETZ3', 'PFRM3', 'PGMN3', 'PINE4', 'PLAS3', 'PLPL3', 'PMAM3', 'PNVL3', 'POMO3', 'POMO4', 'POSI3', 'PPLA11', 'PRIO3', 'PRNR3', 'PSSA3', 'PTBL3', 'PTNT3', 'PTNT4', 'QUAL3', 'RADL3', 'RAIL3', 'RANI3', 'RAPT3', 'RAPT4', 'RCSL3', 'RCSL4', 'RDNI3', 'RDOR3', 'REDE3', 'RENT3', 'ROMI3', 'RPAD5', 'RRRP3', 'RSID3', 'RSUL4', 'SANB11', 'SANB3', 'SANB4', 'SAPR11', 'SAPR3', 'SAPR4', 'SBSP3', 'SCAR3', 'SEER3', 'SEQL3', 'SGPS3', 'SHOW3', 'SHUL4', 'SIMH3', 'SLCE3', 'SMTO3', 'SNSY3', 'SNSY5', 'SOMA3', 'SOND5', 'SQIA3', 'STBP3', 'SULA11', 'SULA3', 'SULA4', 'SUZB3', 'TAEE11', 'TAEE3', 'TAEE4', 'TASA3', 'TASA4', 'TCSA3', 'TECN3', 'TELB3', 'TELB4', 'TEND3', 'TFCO4', 'TGMA3', 'TIMS3', 'TOTS3', 'TPIS3', 'TRIS3', 'TRPL3', 'TRPL4', 'TUPY3', 'UCAS3', 'UGPA3', 'UNIP3', 'UNIP5', 'UNIP6', 'USIM3', 'USIM5', 'VALE3', 'VBBR3', 'VIVA3', 'VIVR3', 'VIVT3', 'VLID3', 'VULC3', 'WEGE3', 'WHRL3', 'WHRL4', 'WIZS3', 'WLMM4', 'YDUQ3', 'RAIZ4', 'AMZO34', 'FBOK34', 'GOGL34', 'BHIA3'];
+        let selectedAssets = [];
+        
+        function showMessage(text, type) {
+            messageDiv.textContent = text;
+            messageDiv.className = `message ${type} show`;
+            setTimeout(() => {
+                messageDiv.classList.remove('show');
+            }, 5000);
+        }
+        
+        function isValidEmail(email) {
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            return emailRegex.test(email);
+        }
+
+        function updateSelectionCounter() {
+            assetsCounterSpan.textContent = `${selectedAssets.length}/${MAX_ASSETS}`;
+        }
+        
+        // Função para filtrar e exibir os resultados da busca
+        function updateSearchResults() {
+            const searchTerm = assetSearchInput.value.trim().toUpperCase();
+            searchResultsList.innerHTML = '';
+            
+            if (searchTerm.length > 0) {
+                const filteredAssets = allAvailableAssets.filter(asset => 
+                    asset.includes(searchTerm) && !selectedAssets.includes(asset)
+                );
+                
+                if (filteredAssets.length > 0) {
+                    filteredAssets.forEach(asset => {
+                        const li = document.createElement('li');
+                        li.textContent = asset;
+                        li.addEventListener('click', () => addAsset(asset));
+                        searchResultsList.appendChild(li);
+                    });
+                    searchResultsList.classList.add('active');
+                } else {
+                    searchResultsList.classList.remove('active');
+                }
+            } else {
+                searchResultsList.classList.remove('active');
+            }
+        }
+        
+        // Função para adicionar um ativo à lista de selecionados, com validação de limite
+        function addAsset(asset) {
+            if (selectedAssets.length >= MAX_ASSETS) {
+                showMessage(`Você pode selecionar no máximo ${MAX_ASSETS} ativos.`, 'error');
+                return;
+            }
+
+            if (!selectedAssets.includes(asset)) {
+                selectedAssets.push(asset);
+                renderSelectedAssets();
+                assetSearchInput.value = ''; // Limpa o campo de busca
+                updateSearchResults(); // Esconde a lista de resultados
+                updateSelectionCounter(); // Atualiza o contador
+            }
+        }
+        
+        // Função para remover um ativo da lista de selecionados
+        function removeAsset(assetToRemove) {
+            selectedAssets = selectedAssets.filter(asset => asset !== assetToRemove);
+            renderSelectedAssets();
+            updateSearchResults();
+            updateSelectionCounter(); // Atualiza o contador
+        }
+        
+        // Função para renderizar os ativos selecionados na tela
+        function renderSelectedAssets() {
+            selectedAssetsContainer.innerHTML = '';
+            if (selectedAssets.length === 0) {
+                const placeholder = document.createElement('span');
+                placeholder.textContent = 'Nenhum ativo selecionado';
+                placeholder.style.color = '#888';
+                selectedAssetsContainer.appendChild(placeholder);
+            } else {
+                selectedAssets.forEach(asset => {
+                    const assetDiv = document.createElement('div');
+                    assetDiv.className = 'selected-asset';
+                    assetDiv.innerHTML = `<span>${asset}</span><span class="remove-asset" data-asset="${asset}">×</span>`;
+                    selectedAssetsContainer.appendChild(assetDiv);
+                });
+            }
+        }
+        
+        // Adiciona um listener para o clique no "x" de remoção
+        selectedAssetsContainer.addEventListener('click', (e) => {
+            if (e.target.classList.contains('remove-asset')) {
+                const assetToRemove = e.target.getAttribute('data-asset');
+                removeAsset(assetToRemove);
+            }
+        });
+
+        function validateForm() {
+            const errors = [];
+            const email = document.getElementById('email').value;
+            
+            if (!email || !isValidEmail(email)) {
+                errors.push('E-mail deve ter um formato válido.');
+            }
+            
+            if (selectedAssets.length === 0) {
+                errors.push('Selecione pelo menos um ativo.');
+            } else if (selectedAssets.length > MAX_ASSETS) {
+                errors.push(`Você pode selecionar no máximo ${MAX_ASSETS} ativos.`);
+            }
+            
+            const selectedPeriod = document.querySelector('input[name="periodo"]:checked');
+            if (!selectedPeriod) {
+                errors.push('Selecione um período de análise.');
+            }
+
+            if (!termosCheckbox.checked) {
+                errors.push('Você deve aceitar os Termos de Uso.');
+            }
+            
+            return errors;
+        }
+
+        async function submitToGoogleScript(formData) {
+            try {
+                const response = await fetch(GOOGLE_SCRIPT_URL, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: new URLSearchParams(formData)
+                });
+                return { success: true };
+                
+            } catch (error) {
+                console.error('Erro ao enviar dados:', error);
+                return { success: false, error: error.message };
+            }
+        }
+        
+        async function handleFormSubmit(event) {
+            event.preventDefault();
+            
+            submitBtn.disabled = true;
+            submitBtn.classList.add('loading');
+            
+            try {
+                const validationErrors = validateForm();
+                if (validationErrors.length > 0) {
+                    showMessage(validationErrors.join(' '), 'error');
+                    return;
+                }
+                
+                const formData = new FormData(form);
+                formData.append('ativos', selectedAssets.join(', '));
+                
+                formData.append('user_agent', navigator.userAgent);
+                formData.append('page_url', window.location.href);
+                formData.append('referrer', document.referrer);
+                formData.append('timestamp_local', new Date().toISOString());
+                
+                const result = await submitToGoogleScript(formData);
+                
+                if (result.success) {
+                    showMessage('Solicitação enviada com sucesso! Você receberá os insights em breve.', 'success');
+                    form.reset();
+                    selectedAssets = [];
+                    renderSelectedAssets();
+                    updateSelectionCounter();
+                } else {
+                    showMessage('Erro ao enviar solicitação. Tente novamente.', 'error');
+                }
+                
+            } catch (error) {
+                console.error('Erro no envio:', error);
+                showMessage('Erro inesperado. Tente novamente mais tarde.', 'error');
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.classList.remove('loading');
+            }
+        }
+        
+        // Adiciona listeners para os novos elementos
+        assetSearchInput.addEventListener('input', updateSearchResults);
+        form.addEventListener('submit', handleFormSubmit);
+        
+        // Oculta a lista de resultados ao clicar fora
+        document.addEventListener('click', function(event) {
+            if (!assetSearchInput.contains(event.target) && !searchResultsList.contains(event.target)) {
+                searchResultsList.classList.remove('active');
+            }
+        });
+        
+        // Lógica do Modal
+        openModalLink.addEventListener('click', (e) => {
+            e.preventDefault();
+            modal.style.display = 'block';
+        });
+
+        closeModalBtn.addEventListener('click', () => {
+            modal.style.display = 'none';
+        });
+
+        window.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                modal.style.display = 'none';
+            }
+        });
+
+        // Inicializa a renderização de ativos selecionados (vazio no início) e o contador
+        renderSelectedAssets();
+        updateSelectionCounter();
+        
+        if (GOOGLE_SCRIPT_URL === 'https://script.google.com/macros/s/AKfycbxd3b5tCmZbh5_-i9jOlEXBMBJFYsBbPg9j_rxQBrH6ybbGZO7X1fGxEq_ljC0tVuA/exec') {
+            console.warn('⚠️ ATENÇÃO: Configure a URL do Google Apps Script na variável GOOGLE_SCRIPT_URL');
+            showMessage('Configuração pendente: URL do Google Apps Script não definida.', 'error');
+        }
+    });
+    </script>
+</body>
+</html>
