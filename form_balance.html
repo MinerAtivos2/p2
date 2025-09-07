@@ -507,6 +507,24 @@
     </style>
 </head>
 <body>
+
+<script>
+        function resizeIframe() {
+            // Pega a altura total do corpo da página
+            const height = document.body.scrollHeight;
+            // Envia a altura para a página pai
+            window.parent.postMessage({ height: height }, 'https://minerativos.com.br');
+        }
+
+        // Chama a função ao carregar e sempre que a janela for redimensionada
+        window.onload = resizeIframe;
+        window.onresize = resizeIframe;
+
+        // Opcional: Chama a função com um pequeno atraso para garantir que tudo foi carregado
+        setTimeout(resizeIframe, 500);
+    </script>
+
+	
     <div class="form-container">
         <div class="form-title">
             <h2>Insights de Mercado</h2>
@@ -835,4 +853,5 @@
     });
     </script>
 </body>
+
 </html>
